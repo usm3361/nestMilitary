@@ -1,13 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ShiftsService } from './shifts.service';
 import { CreateShiftDto } from './dto/create-shift.dto';
 import { UpdateShiftDto } from './dto/update-shift.dto';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from 'src/users/enums/role.enum';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
 
 @Controller('shifts')
 export class ShiftsController {
   constructor(private readonly shiftsService: ShiftsService) {}
 
   @Post()
+  @Roles(Role.Commander, Role.Soldier)
+  // @UseGuards(AuthGuard, RolesGuard)
   create(@Body() createShiftDto: CreateShiftDto) {
     return this.shiftsService.create(createShiftDto);
   }

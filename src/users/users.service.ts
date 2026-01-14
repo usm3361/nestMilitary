@@ -1,46 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { InjectModel } from '@nestjs/sequelize';
+import { User } from './user.model';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  private users = [
-    {
-      userId: 1,
-      username: 'john',
-      password: 'changeme',
-      role: 'soldier',
-    },
-    {
-      userId: 2,
-      username: 'commander',
-      password: 'admin123',
-      role: 'commander',
-    },
-  ];
+  constructor(
+    @InjectModel(User)
+    private userModel: typeof User,
+  ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  async findOne(username: string): Promise<User | null> {
+    const user = await this.userModel.findOne({
+      where: { username },
+      raw: true,
+    });
+    return user;
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async createUser(userModel): Promise<User | null> {
+    const { password, ...rest } = userModel;
+    const salt = await bcrypt.genSalt();
+    const hash = await bcrypt.hash(password, salt);
+    const newUser = await this.userModel.create({
+      ...rest,
+      password: hash,
+    });
+    return newUser;
   }
 
-  findById(id: number) {
-    return this.users.find((user) => user.userId === id);
-  }
-  
-  async findOne(username: string): Promise<User | undefined> {
-    return this.users.find((user) => user.username === username);
+  findAll(): Promise<User[] | null> {
+    return this.userModel.findAll();
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+  // findById(id: number) {
+  //   return
+  // }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  }
+  // update(id: number, updateUserDto: UpdateUserDto) {
+  //   return `This action updates a #${id} user`;
+  // }
+
+  // remove(id: number) {
+  //   return `This action removes a #${id} user`;
+  // }
 }

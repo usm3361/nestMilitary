@@ -1,24 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { CreateShiftDto } from './dto/create-shift.dto';
 import { UpdateShiftDto } from './dto/update-shift.dto';
-import { Shift } from './entities/shift.entity';
+import { InjectModel } from '@nestjs/sequelize';
+import { Shift } from './shift.model';
+import { CreateShiftDto } from './dto/create-shift.dto';
 
 @Injectable()
 export class ShiftsService {
-  private shifts: Shift[] = [
-    { id: 1, location: 'Main Gate', startTime: '08:00', endTime: '12:00' },
-  ]
-  create(createShiftDto: CreateShiftDto) {
-    const newShift: Shift = {
-      id: this.shifts.length + 1,
-      ...createShiftDto,
-    }
-    this.shifts.push(newShift)
-    return newShift;
+  constructor(
+    @InjectModel(Shift)
+    private shiftModel: typeof Shift,
+  ) {}
+
+  create(createShiftDto): Promise<Shift | null> {
+    return this.shiftModel.create(createShiftDto);
   }
 
-  findAll():Shift[] {
-    return this.shifts;
+  findAll(): Promise<Shift[] | null> {
+    return this.shiftModel.findAll();
   }
 
   findOne(id: number) {
