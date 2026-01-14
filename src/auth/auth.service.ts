@@ -2,7 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
-import { User } from 'src/users/user.model';
+import { LoginDto } from './dto/login.dto';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -20,25 +21,26 @@ export class AuthService {
 
     return null;
   }
-  async signIn(
-    username: string,
-    pass: string,
-  ): Promise<{ access_token: string }> {
-    const user = await this.usersService.findOne(username);
-    if (!user || !user.password) {
-      throw new UnauthorizedException('');
-    }
-    const byc = await bcrypt.compare(pass, user.password);
-    if (!byc) {
-      throw new UnauthorizedException('');
+  async login(loginDto: LoginDto): Promise<{ access_token: string }> {
+    const user = await this.validateUser(loginDto.username, loginDto.password);
+    if (!user) {
+      throw new UnauthorizedException(
+        'Invalid credentials (username or password)',
+      );
     }
 
-    const { password, ...rest } = user;
-    const payload = rest;
-    return { access_token: await this.jwtService.signAsync(payload) };
+    const payload = {
+      username: user.username,
+      sub: user.userId, // או user.id תלוי איך זה מוגדר אצלך ב-User
+      role: user.role,
+    };
+    return { access_token: this.jwtService.sign(payload) };
   }
-  async signUp(userModel: User): Promise<User | null> {
-    const user = await this.usersService.createUser(userModel);
-    return user;
+  async signUp(createUserDto: CreateUserDto) {
+    return this.usersService.create(
+      createUserDto.username,
+      createUserDto.password,
+      createUserDto.role,
+    );
   }
 }

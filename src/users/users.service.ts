@@ -11,37 +11,39 @@ export class UsersService {
   ) {}
 
   async findOne(username: string): Promise<User | null> {
-    const user = await this.userModel.findOne({
+    return this.userModel.findOne({
       where: { username },
       raw: true,
     });
-    return user;
   }
 
-  async createUser(userModel): Promise<User | null> {
-    const { password, ...rest } = userModel;
+  async create(
+    username: string,
+    pass: string,
+    role: string = 'soldier',
+  ): Promise<User> {
     const salt = await bcrypt.genSalt();
-    const hash = await bcrypt.hash(password, salt);
+    const hash = await bcrypt.hash(pass, salt);
     const newUser = await this.userModel.create({
-      ...rest,
+      username: username,
       password: hash,
+      role: role,
     });
-    return newUser;
+    return newUser.get({ plain: true });
   }
 
   findAll(): Promise<User[] | null> {
     return this.userModel.findAll();
   }
 
-  // findById(id: number) {
-  //   return
-  // }
+  async findById(id: number): Promise<User | null> {
+    return this.userModel.findByPk(id);
+  }
 
-  // update(id: number, updateUserDto: UpdateUserDto) {
-  //   return `This action updates a #${id} user`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} user`;
-  // }
+  async remove(id: number): Promise<void> {
+    const user = await this.findById(id);
+    if (user) {
+      await user.destroy();
+    }
+  }
 }
