@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './user.model';
 import * as bcrypt from 'bcrypt';
@@ -10,14 +10,7 @@ export class UsersService {
     private userModel: typeof User,
   ) {}
 
-  async findOne(username: string): Promise<User | null> {
-    return this.userModel.findOne({
-      where: { username },
-      raw: true,
-    });
-  }
-
-  async create(
+    async create(
     username: string,
     pass: string,
     role: string = 'soldier',
@@ -31,19 +24,31 @@ export class UsersService {
     });
     return newUser.get({ plain: true });
   }
-
+  
   findAll(): Promise<User[] | null> {
     return this.userModel.findAll();
   }
 
+  async findOne(username: string): Promise<User | null> {
+    return this.userModel.findOne({
+      where: { username },
+      raw: true,
+    });
+  }
+  
   async findById(id: number): Promise<User | null> {
-    return this.userModel.findByPk(id);
+    const user = await this.userModel.findByPk(id);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
   }
 
   async remove(id: number): Promise<void> {
     const user = await this.findById(id);
-    if (user) {
-      await user.destroy();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
+    return await user.destroy();
   }
 }

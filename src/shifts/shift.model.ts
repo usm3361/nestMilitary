@@ -1,7 +1,13 @@
-import { Column,  Model, Table } from 'sequelize-typescript';
+import { Column, Model, Table } from 'sequelize-typescript';
+
+interface ShiftCreationAttrs {
+  location: string;
+  startTime: string;
+  endTime: string;
+}
 
 @Table
-export class Shift extends Model<Shift> {
+export class Shift extends Model<Shift, ShiftCreationAttrs> {
 
   @Column
   declare startTime: string;
@@ -11,4 +17,5 @@ export class Shift extends Model<Shift> {
 
   @Column
   declare location: string;
+
 }

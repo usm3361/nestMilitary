@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { UpdateShiftDto } from './dto/update-shift.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Shift } from './shift.model';
 import { CreateShiftDto } from './dto/create-shift.dto';
+import { UpdateShiftDto } from './dto/update-shift.dto';
+import { Role } from 'src/users/enums/role.enum';
 
 @Injectable()
 export class ShiftsService {
@@ -11,23 +12,38 @@ export class ShiftsService {
     private shiftModel: typeof Shift,
   ) {}
 
-  create(createShiftDto): Promise<Shift | null> {
-    return this.shiftModel.create(createShiftDto);
+  async create(createShiftDto: CreateShiftDto, userId: number) {
+    return this.shiftModel.create({
+      ...createShiftDto,
+      userId: userId,
+    });
   }
 
-  findAll(): Promise<Shift[] | null> {
-    return this.shiftModel.findAll();
+  async findAll(user: any) {
+    if (user.role === Role.Commander) {
+      return this.shiftModel.findAll();
+    }
+    return this.shiftModel.findAll({
+      where: { userId: user.id },
+    });
+  }
+  async findOne(id: number) {
+    const shift = await this.shiftModel.findByPk(id);
+    if (!shift) {
+      throw new NotFoundException(`Shift #${id} not found`);
+    }
+    return shift;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} shift`;
+  async update(id: number, updateShiftDto: UpdateShiftDto) {
+    const shift = await this.findOne(id);
+    await shift.update(updateShiftDto);
+    return shift;
   }
 
-  update(id: number, updateShiftDto: UpdateShiftDto) {
-    return `This action updates a #${id} shift`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} shift`;
+  async remove(id: number) {
+    const shift = await this.findOne(id);
+    await shift.destroy();
+    return { message: 'Shift deleted successfully' };
   }
 }

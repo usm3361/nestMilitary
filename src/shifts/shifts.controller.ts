@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { ShiftsService } from './shifts.service';
 import { CreateShiftDto } from './dto/create-shift.dto';
@@ -15,20 +17,20 @@ import { Role } from 'src/users/enums/role.enum';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 
+@UseGuards(AuthGuard, RolesGuard)
 @Controller('shifts')
 export class ShiftsController {
   constructor(private readonly shiftsService: ShiftsService) {}
 
   @Post()
-  @Roles(Role.Commander, Role.Soldier)
-  // @UseGuards(AuthGuard, RolesGuard)
-  create(@Body() createShiftDto: CreateShiftDto) {
-    return this.shiftsService.create(createShiftDto);
+  @Roles(Role.Commander)
+  create(@Body() createShiftDto: CreateShiftDto, @Request() req) {
+    return this.shiftsService.create(createShiftDto, req.user.id);
   }
 
   @Get()
-  findAll() {
-    return this.shiftsService.findAll();
+  findAll(@Request() req) {
+    return this.shiftsService.findAll(req.user);
   }
 
   @Get(':id')
@@ -37,11 +39,13 @@ export class ShiftsController {
   }
 
   @Patch(':id')
+  @Roles(Role.Commander)
   update(@Param('id') id: string, @Body() updateShiftDto: UpdateShiftDto) {
     return this.shiftsService.update(+id, updateShiftDto);
   }
 
   @Delete(':id')
+  @Roles(Role.Commander)
   remove(@Param('id') id: string) {
     return this.shiftsService.remove(+id);
   }
