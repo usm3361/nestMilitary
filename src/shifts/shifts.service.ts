@@ -12,21 +12,14 @@ export class ShiftsService {
     private shiftModel: typeof Shift,
   ) {}
 
-  async create(createShiftDto: CreateShiftDto, userId: number) {
-    return this.shiftModel.create({
-      ...createShiftDto,
-      userId: userId,
-    });
+  async create(createShiftDto: CreateShiftDto) {
+    return this.shiftModel.create(createShiftDto);
   }
 
-  async findAll(user: any) {
-    if (user.role === Role.Commander) {
-      return this.shiftModel.findAll();
-    }
-    return this.shiftModel.findAll({
-      where: { userId: user.id },
-    });
+  async findAll() {
+    return this.shiftModel.findAll();
   }
+
   async findOne(id: number) {
     const shift = await this.shiftModel.findByPk(id);
     if (!shift) {

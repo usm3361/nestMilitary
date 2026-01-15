@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   UseGuards,
-  Request,
 } from '@nestjs/common';
 import { ShiftsService } from './shifts.service';
 import { CreateShiftDto } from './dto/create-shift.dto';
@@ -24,13 +23,13 @@ export class ShiftsController {
 
   @Post()
   @Roles(Role.Commander)
-  create(@Body() createShiftDto: CreateShiftDto, @Request() req) {
-    return this.shiftsService.create(createShiftDto, req.user.id);
+  create(@Body() createShiftDto: CreateShiftDto) {
+    return this.shiftsService.create(createShiftDto);
   }
 
   @Get()
-  findAll(@Request() req) {
-    return this.shiftsService.findAll(req.user);
+  findAll() {
+    return this.shiftsService.findAll();
   }
 
   @Get(':id')

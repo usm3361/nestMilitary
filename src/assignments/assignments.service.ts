@@ -1,26 +1,59 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
+import { InjectModel } from '@nestjs/sequelize';
+import { Assignment } from './assignment.model';
+import { Shift } from 'src/shifts/shift.model';
+import { User } from 'src/users/user.model';
+import { Role } from 'src/users/enums/role.enum';
 
 @Injectable()
 export class AssignmentsService {
-  create(createAssignmentDto: CreateAssignmentDto) {
-    return 'This action adds a new assignment';
+  constructor(
+    @InjectModel(Assignment)
+    private assignmentModel: typeof Assignment,
+  ) { }
+
+  async create(createAssignmentDto: CreateAssignmentDto) {
+    return this.assignmentModel.create({
+      userId: createAssignmentDto.userId,
+      shiftId: createAssignmentDto.shiftId,
+    });
   }
 
-  findAll() {
-    return `This action returns all assignments`;
+  async findAll(user: any) {
+    const includeOptions = [
+      { model: Shift },
+      { model: User, attributes: ['username'] },
+    ];
+
+    if (user.role === Role.Commander) {
+      return this.assignmentModel.findAll({
+        include: includeOptions,
+      });
+    }
+    return this.assignmentModel.findAll({
+      where: { userId: user.id },
+      include: includeOptions
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} assignment`;
+async findOne(id: number) {
+    const assignment = await this.assignmentModel.findByPk(id);
+    if (!assignment) {
+      throw new NotFoundException(`assignment #${id} not found`);
+    }
+    return assignment;
   }
 
-  update(id: number, updateAssignmentDto: UpdateAssignmentDto) {
-    return `This action updates a #${id} assignment`;
+async update(id: number, updateAssignmentDto: UpdateAssignmentDto) {
+    const assignment = await this.findOne(id);
+    await assignment.update(updateAssignmentDto);
+    return assignment;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} assignment`;
-  }
-}
+  async remove(id: number) {
+    const assignment = await this.findOne(id);
+    await assignment.destroy();
+    return { message: 'assignment deleted successfully' };
+  }}

@@ -10,12 +10,12 @@ interface ShiftCreationAttrs {
 export class Shift extends Model<Shift, ShiftCreationAttrs> {
 
   @Column
+  declare location: string;
+  
+  @Column
   declare startTime: string;
 
   @Column
   declare endTime: string;
-
-  @Column
-  declare location: string;
 
 }

@@ -1,4 +1,11 @@
+import { IsNotEmpty, IsNumber } from 'class-validator';
+
 export class CreateAssignmentDto {
-    userId: string
-    shiftId:string
+  @IsNotEmpty()
+  @IsNumber()
+  userId: Number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  shiftId: Number;
 }
